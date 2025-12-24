@@ -1,0 +1,23 @@
+{
+  "name": "Dairy Manager Pro",
+  "short_name": "DairyPro",
+  "description": "Professional Dairy and Cattle Management System",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f0fdf4",
+  "theme_color": "#16a34a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2304/2304779.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2304/2304779.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

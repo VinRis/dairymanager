@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dairy Manager Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <!-- Welcome Screen -->
+    <div id="welcome-screen">
+        <div class="welcome-content">
+            <h1 id="welcome-text">Dairy Manager Pro</h1>
+            <p>Your herd's digital companion</p>
+            <div id="proceed-btn" style="margin-top: 40px; cursor: pointer;">
+                <i data-lucide="arrow-right-circle" size="64"></i>
+            </div>
+        </div>
+        <div class="welcome-footer">
+            <div class="backup-restore-group">
+                <button onclick="utils.backupData()" class="card" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 10px 20px;">Backup</button>
+                <button onclick="document.getElementById('restore-input').click()" class="card" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 10px 20px;">Restore</button>
+                <input type="file" id="restore-input" hidden onchange="utils.restoreData(this.files[0])">
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="app" class="hidden">
+        <!-- Dashboard View -->
+        <section id="view-dashboard" class="view active">
+            <header>
+                <h2 id="header-farm-name">My Farm</h2>
+                <p id="header-location">Loading location...</p>
+            </header>
+
+            <div class="kpi-grid">
+                <div class="card kpi-card">
+                    <span class="kpi-label">Today's Milk</span>
+                    <span id="kpi-milk" class="kpi-value">0 L</span>
+                </div>
+                <div class="card kpi-card">
+                    <span class="kpi-label">Month Revenue</span>
+                    <span id="kpi-revenue" class="kpi-value">$0</span>
+                </div>
+            </div>
+
+            <div class="card chart-container">
+                <div class="flex-between" style="margin-bottom: 10px;">
+                    <h3 style="font-size: 0.9rem;">Milk Production</h3>
+                    <select id="chart-toggle" style="width: auto; padding: 5px;">
+                        <option value="monthly">Monthly</option>
+                        <option value="annual">Annual</option>
+                    </select>
+                </div>
+                <canvas id="prodChart"></canvas>
+            </div>
+
+            <div class="card mt-4">
+                <h3>Herd Insights</h3>
+                <p id="insight-text" style="font-size: 0.9rem; margin-top: 10px; opacity: 0.8;"></p>
+            </div>
+        </section>
+
+        <!-- History View -->
+        <section id="view-history" class="view">
+            <h2>Activity History</h2>
+            <div class="flex-between mt-4">
+                <input type="text" id="history-search" placeholder="Search records...">
+                <button onclick="app.exportHistoryCSV()" class="card" style="margin-left:10px;"><i data-lucide="download"></i></button>
+            </div>
+            <div id="history-list" class="mt-4"></div>
+        </section>
+
+        <!-- Finance View -->
+        <section id="view-finance" class="view">
+            <h2>Financials</h2>
+            <div class="kpi-grid mt-4">
+                <div class="card kpi-card" style="border-left: 4px solid var(--primary);">
+                    <span class="kpi-label">Income</span>
+                    <span id="fin-income" class="kpi-value">0</span>
+                </div>
+                <div class="card kpi-card" style="border-left: 4px solid var(--danger);">
+                    <span class="kpi-label">Expenses</span>
+                    <span id="fin-expense" class="kpi-value">0</span>
+                </div>
+            </div>
+            <div id="finance-list" class="mt-4"></div>
+        </section>
+
+        <!-- Health View -->
+        <section id="view-health" class="view">
+            <h2>Health Records</h2>
+            <div class="card mt-4" style="background: #fee2e2;">
+                <h3 style="color: #991b1b; font-size: 0.9rem;">Upcoming Events</h3>
+                <div id="health-alerts" class="mt-4"></div>
+            </div>
+            <div id="health-list" class="mt-4"></div>
+        </section>
+
+        <!-- Reports View -->
+        <section id="view-reports" class="view">
+            <h2>Reports & Inventory</h2>
+            <button onclick="app.generateFullReport()" class="primary mt-4">Generate Professional PDF</button>
+            
+            <h3 class="mt-4">Inventory Summary</h3>
+            <div id="inventory-list" class="mt-4"></div>
+        </section>
+
+        <!-- Settings View -->
+        <section id="view-settings" class="view">
+            <h2>Settings</h2>
+            <form id="settings-form" class="mt-4">
+                <div class="form-group">
+                    <label>Farm Name</label>
+                    <input type="text" name="farmName" id="set-farm-name">
+                </div>
+                <div class="form-group">
+                    <label>Manager Name</label>
+                    <input type="text" name="managerName" id="set-manager-name">
+                </div>
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" name="location" id="set-location">
+                </div>
+                <div class="form-group">
+                    <label>Currency</label>
+                    <select name="currency" id="set-currency">
+                        <option value="USD">USD ($)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="GBP">GBP (£)</option>
+                        <option value="KES">KES (Ksh)</option>
+                    </select>
+                </div>
+                <div class="flex-between card">
+                    <span>Dark Mode</span>
+                    <input type="checkbox" id="theme-toggle" style="width: auto;">
+                </div>
+                <button type="submit" class="primary mt-4">Save Settings</button>
+            </form>
+            <button onclick="window.close()" class="card mt-4" style="width: 100%; color: var(--danger);">Exit Application</button>
+        </section>
+
+        <!-- FAB & Nav -->
+        <div id="fab-container">
+            <button class="fab" id="main-fab"><i data-lucide="plus"></i></button>
+        </div>
+
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active" data-view="dashboard"><i data-lucide="layout-dashboard"></i><span>Dash</span></a>
+            <a href="#" class="nav-item" data-view="history"><i data-lucide="calendar"></i><span>History</span></a>
+            <a href="#" class="nav-item" data-view="finance"><i data-lucide="wallet"></i><span>Finance</span></a>
+            <a href="#" class="nav-item" data-view="health"><i data-lucide="heart-pulse"></i><span>Health</span></a>
+            <a href="#" class="nav-item" data-view="reports"><i data-lucide="file-text"></i><span>Reports</span></a>
+            <a href="#" class="nav-item" data-view="settings"><i data-lucide="settings"></i><span>Settings</span></a>
+        </nav>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="fab-modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px;">Add Record</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <button class="card" onclick="app.showForm('production')">Milk Entry</button>
+                <button class="card" onclick="app.showForm('finance')">Financial</button>
+                <button class="card" onclick="app.showForm('inventory')">Inventory</button>
+                <button class="card" onclick="app.showForm('health')">Health</button>
+            </div>
+            <button class="card mt-4" style="width: 100%;" onclick="app.closeModals()">Cancel</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="form-modal">
+        <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
+            <h3 id="form-title" style="margin-bottom: 20px;">Form</h3>
+            <form id="dynamic-form"></form>
+            <button class="card mt-4" style="width: 100%;" onclick="app.closeModals()">Back</button>
+        </div>
+    </div>
+
+    <script src="db.js"></script>
+    <script src="utils.js"></script>
+    <script src="app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./service-worker.js');
+        }
+    </script>
+</body>
+</html>
